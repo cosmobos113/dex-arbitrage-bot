@@ -3,6 +3,7 @@ from flask import Flask, request
 import os
 import json
 from swap import set_web3_and_router, perform_swap
+from flask import jsonify
 
 # === CONFIGURARE ȘI CONECTARE ===
 INFURA_URL = "https://sepolia.infura.io/v3/5e9a2d027d0d4a88a528ec4b54bcbe4f"
@@ -64,7 +65,25 @@ def get_quote():
         return f"🔄 Quote: {amount_eth} ETH → ≈ {quote_usdc:.2f} USDC"
     except Exception as e:
         return f"⚠️ Eroare la quote: {e}"
+@app.route('/swap', methods=['POST'])
+def swap_route():
+    data = request.get_json(force=True)
+    amount_eth = float(data.get('amount', 0.01))
+    try:
+        tx_hash, block_number = perform_swap(PRIVATE_KEY, ADDRESS, amount_eth)
+        return jsonify({
+            "tx_hash": tx_hash,
+            "block_number": block_number,
+            "message": f"Swap {amount_eth} ETH executat."
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
+
+
+
+
+
