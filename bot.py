@@ -16,6 +16,9 @@ if not w3.is_connected():
 print(f"✅ Conectat la Sepolia")
 print(f"🔐 Wallet: {ADDRESS}")
 
+# După ce ai deja w3 = Web3(Web3.HTTPProvider(INFURA_URL))
+set_web3_and_router(w3)
+
 # === CONTRACT QUOTER ===
 QUOTER_V2_ADDRESS = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
 QUOTER_V2_ABI = json.loads('[{"inputs":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint160","name":"sqrtPriceLimitX96","type":"uint160"}],"name":"quoteExactInputSingle","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],"stateMutability":"view","type":"function"}]')
