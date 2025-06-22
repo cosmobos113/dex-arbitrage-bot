@@ -2,7 +2,7 @@ from web3 import Web3
 from flask import Flask, request
 import os
 import json
-from swap import set_web3_and_router, perform_swap, simulate_swap
+from swap import set_web3_and_router, perform_swap
 from flask import jsonify
 
 # === CONFIGURARE ȘI CONECTARE ===
@@ -19,10 +19,11 @@ print(f"🔐 Wallet: {ADDRESS}")
 
 set_web3_and_router(w3)
 
-# === CONTRACT QUOTER (comentat, folosit anterior) ===
-# QUOTER_V2_ADDRESS = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
-# QUOTER_V2_ABI = json.loads('[{"inputs":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint160","name":"sqrtPriceLimitX96","type":"uint160"}],"name":"quoteExactInputSingle","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],"stateMutability":"view","type":"function"}]')
-# quoter = w3.eth.contract(address=QUOTER_V2_ADDRESS, abi=QUOTER_V2_ABI)
+# === CONTRACT QUOTER ===
+QUOTER_V2_ADDRESS = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
+QUOTER_V2_ABI = json.loads('[{"inputs":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint160","name":"sqrtPriceLimitX96","type":"uint160"}],"name":"quoteExactInputSingle","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],"stateMutability":"view","type":"function"}]')
+
+quoter = w3.eth.contract(address=QUOTER_V2_ADDRESS, abi=QUOTER_V2_ABI)
 
 WETH = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6"
 USDC = "0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4"
@@ -46,39 +47,22 @@ def get_quote():
     amount_eth_str = request.args.get('amount', '0.01')
     try:
         amount_eth = float(amount_eth_str)
+        amount_in_wei = w3.to_wei(amount_eth, 'ether')
     except ValueError:
         return "⚠️ Parametru 'amount' invalid. Trebuie un număr."
 
     try:
-        amount_out = simulate_swap(amount_eth)
-        # USDC are 6 zecimale, deci convertim la format uman
-        amount_out_usdc = amount_out / 10**6
-        return f"🔄 Quote simulare: {amount_eth} ETH → ≈ {amount_out_usdc:.2f} USDC"
+        quote = quoter.functions.quoteExactInputSingle(
+            WETH,
+            USDC,
+            FEE,
+            amount_in_wei,
+            0
+        ).call()
+        quote_usdc = quote / 10**6  # USDC are 6 zecimale
+        return f"🔄 Quote: {amount_eth} ETH → ≈ {quote_usdc:.2f} USDC"
     except Exception as e:
-        return f"⚠️ Eroare la simulare quote: {e}"
-
-# Varianta veche cu quoter, comentată
-# @app.route('/quote')
-# def get_quote_old():
-#     amount_eth_str = request.args.get('amount', '0.01')
-#     try:
-#         amount_eth = float(amount_eth_str)
-#         amount_in_wei = w3.to_wei(amount_eth, 'ether')
-#     except ValueError:
-#         return "⚠️ Parametru 'amount' invalid. Trebuie un număr."
-#
-#     try:
-#         quote = quoter.functions.quoteExactInputSingle(
-#             WETH,
-#             USDC,
-#             FEE,
-#             amount_in_wei,
-#             0
-#         ).call()
-#         quote_usdc = quote / 10**6
-#         return f"🔄 Quote: {amount_eth} ETH → ≈ {quote_usdc:.2f} USDC"
-#     except Exception as e:
-#         return f"⚠️ Eroare la quote: {e}"
+        return f"⚠️ Eroare la quote: {e}"
 
 @app.route('/swap', methods=['POST'])
 def swap_route():
