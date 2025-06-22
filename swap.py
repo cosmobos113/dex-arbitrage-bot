@@ -54,7 +54,7 @@ def perform_swap(private_key, address, amount_eth):
 
     params = {
         "tokenIn": Web3.to_checksum_address("0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6"),   # WETH Sepolia
-        "tokenOut": Web3.to_checksum_address("0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4c"),  # USDC Sepolia
+        "tokenOut": Web3.to_checksum_address("0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4"),  # USDC Sepolia
         "fee": 3000,  # 0.3%
         "recipient": Web3.to_checksum_address(address),
         "deadline": deadline,
@@ -77,29 +77,3 @@ def perform_swap(private_key, address, amount_eth):
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
     return tx_hash.hex(), receipt.blockNumber
-
-def simulate_swap(amount_eth):
-    if w3 is None or router is None:
-        raise Exception("Web3 or Router not initialized. Call set_web3_and_router first.")
-
-    amount_in_wei = w3.to_wei(amount_eth, 'ether')
-    deadline = w3.eth.get_block('latest')['timestamp'] + 600  # +10 minute termen limită
-
-    params = {
-        "tokenIn": Web3.to_checksum_address("0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6"),   # WETH Sepolia
-        "tokenOut": Web3.to_checksum_address("0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4c"),  # USDC Sepolia
-        "fee": 3000,  # 0.3%
-        "recipient": Web3.to_checksum_address("0x0000000000000000000000000000000000000000"),  # Dummy recipient
-        "deadline": deadline,
-        "amountIn": amount_in_wei,
-        "amountOutMinimum": 0,
-        "sqrtPriceLimitX96": 0
-    }
-
-    # Call metoda exactInputSingle ca simulare (quote)
-    amount_out = router.functions.exactInputSingle(params).call({
-        "from": "0x0000000000000000000000000000000000000000",
-        "value": amount_in_wei,
-    })
-
-    return amount_out
