@@ -1,10 +1,11 @@
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+print("=== Environment Variables ===")
+for key, value in os.environ.items():
+    print(f"{key} = {value}")
 
-INFURA_URL = os.getenv("https://sepolia.infura.io/v3/5e9a2d027d0d4a88a528ec4b54bcbe4f")
-PRIVATE_KEY = os.getenv("d3b3cfb486c0114a68d5a67b3b9bdb04a99962dfde44e2bcd0fb77f26df01ea4")
+infura_url = os.getenv('INFURA_URL')
+private_key = os.getenv('PRIVATE_KEY')
 
-print(f"INFURA_URL is set: {INFURA_URL is not None}")
-print(f"PRIVATE_KEY is set: {PRIVATE_KEY is not None}")
+print(f"\nINFURA_URL is set: {bool(infura_url)}")
+print(f"PRIVATE_KEY is set: {bool(private_key)}")
