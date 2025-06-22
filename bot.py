@@ -1,69 +1,56 @@
-from web3 import Web3
 import os
+from web3 import Web3
+from dotenv import load_dotenv
+from uniswap import UniswapV3
 
-def main():
-    INFURA_URL = os.getenv("INFURA_URL")
-    PRIVATE_KEY = os.getenv("PRIVATE_KEY")
-    if not INFURA_URL or not PRIVATE_KEY:
-        print("Setează variabilele de mediu INFURA_URL și PRIVATE_KEY!")
-        return
+# Încarcă variabilele de mediu
+load_dotenv()
 
-    w3 = Web3(Web3.HTTPProvider(INFURA_URL))
-    if not w3.is_connected():
-        print("Nu s-a putut conecta la node-ul Ethereum!")
-        return
+# Verifică dacă variabilele de mediu sunt setate corect
+INFURA_URL = os.getenv("INFURA_URL")
+PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
-    print("Conectat la Sepolia testnet prin Infura!")
+if not INFURA_URL or not PRIVATE_KEY:
+    print("Eroare: INFURA_URL sau PRIVATE_KEY nu sunt setate corect.")
+    exit()
 
-    account = w3.eth.account.from_key(PRIVATE_KEY)
-    print(f"Folosind contul: {account.address}")
+# Conectează-te la Sepolia Testnet prin Infura
+w3 = Web3(Web3.HTTPProvider(INFURA_URL))
+account = w3.eth.account.privateKeyToAccount(PRIVATE_KEY)
+print(f"Conectat la Sepolia testnet prin Infura!\nFolosind contul: {account.address}")
 
-    # Adrese corecte pentru Sepolia:
+# Adresele contractelor Uniswap V3 pe Sepolia
+UNISWAP_V3_FACTORY_ADDRESS = "0x0227628f3F023bb0B980b67D528571c95c6DaC1c"
+SWAP_ROUTER_ADDRESS = "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E"
+QUOTER_ADDRESS = "0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3"
+WETH_ADDRESS = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+DAI_ADDRESS = "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 
-    # SushiSwap Router V2 (funcționează pe Sepolia)
-    router_address = w3.to_checksum_address('0x1b02da8cb0d097eb8d57a175b88c7d8b47997506')
+# Instanțiază obiectul UniswapV3
+uni = UniswapV3(
+    w3=w3,
+    private_key=PRIVATE_KEY,
+    router_address=SWAP_ROUTER_ADDRESS,
+    factory_address=UNISWAP_V3_FACTORY_ADDRESS,
+    quoter_address=QUOTER_ADDRESS,
+    weth_address=WETH_ADDRESS,
+    dai_address=DAI_ADDRESS
+)
 
-    # Tokeni pe Sepolia (verificați)
-    WETH_address = w3.to_checksum_address('0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6')
-    DAI_address = w3.to_checksum_address('0xaD6D458402F60fD3Bd25163575031ACDce07538D')
+# Exemplu de swap: 0.1 WETH -> DAI
+amount_in = 0.1  # în WETH
+amount_out_min = 100  # în DAI (valoare estimată minimă)
+recipient = account.address
+deadline = w3.eth.get_block('latest')['timestamp'] + 1200  # 20 minute de la blocul curent
 
-    print(f"Uniswap Router Address: {router_address}")
-    print(f"WETH Token Address: {WETH_address}")
-    print(f"DAI Token Address: {DAI_address}")
-
-    # Verificăm dacă contractul router există
-    code = w3.eth.get_code(router_address)
-    if code == b'':
-        print("Nu există contract la adresa routerului pe Sepolia!")
-        return
-    else:
-        print("Contract găsit la adresa routerului.")
-
-    router_abi = [
-        {
-            "inputs": [
-                {"internalType": "uint256", "name": "amountIn", "type": "uint256"},
-                {"internalType": "address[]", "name": "path", "type": "address[]"}
-            ],
-            "name": "getAmountsOut",
-            "outputs": [
-                {"internalType": "uint256[]", "name": "amounts", "type": "uint256[]"}
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ]
-
-    contract = w3.eth.contract(address=router_address, abi=router_abi)
-
-    eth_amount = w3.to_wei(0.01, 'ether')
-    path = [WETH_address, DAI_address]
-
-    try:
-        amounts_out = contract.functions.getAmountsOut(eth_amount, path).call()
-        print(f"Pentru {w3.from_wei(eth_amount, 'ether')} WETH primești aproximativ {w3.from_wei(amounts_out[-1], 'ether')} DAI.")
-    except Exception as e:
-        print("Eroare la apelul getAmountsOut:", e)
-
-if __name__ == "__main__":
-    main()
+# Realizează swap-ul
+try:
+    tx = uni.swap_exact_tokens_for_tokens(
+        amount_in,
+        amount_out_min,
+        recipient,
+        deadline
+    )
+    print(f"Swap realizat cu succes! Hash tranzacție: {tx.transactionHash.hex()}")
+except Exception as e:
+    print(f"Eroare la realizarea swap-ului: {e}")
