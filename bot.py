@@ -2,6 +2,7 @@ from web3 import Web3
 from flask import Flask, request
 import os
 import json
+from swap import set_web3_and_router, perform_swap
 
 # === CONFIGURARE ȘI CONECTARE ===
 INFURA_URL = "https://sepolia.infura.io/v3/5e9a2d027d0d4a88a528ec4b54bcbe4f"
