@@ -54,7 +54,7 @@ def perform_swap(private_key, address, amount_eth):
 
     params = {
         "tokenIn": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",   # WETH Sepolia
-        "tokenOut": "0xD35CceEAD182dcee0F148EbaC9447DA2c4D449c4",  # USDC Sepolia
+        "tokenOut": "0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4c",  # USDC Sepolia
         "fee": 3000,  # 0.3%
         "recipient": address,
         "deadline": deadline,
