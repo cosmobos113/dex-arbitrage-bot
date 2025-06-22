@@ -2,7 +2,7 @@ from web3 import Web3
 import json
 
 # Adresa și ABI Router Uniswap V3 (ExactInputSingle)
-UNISWAP_ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+UNISWAP_ROUTER_ADDRESS = Web3.to_checksum_address("0xE592427A0AEce92De3Edee1F18E0157C05861564")
 UNISWAP_ROUTER_ABI = json.loads("""
 [
   {
@@ -53,10 +53,10 @@ def perform_swap(private_key, address, amount_eth):
     deadline = w3.eth.get_block('latest')['timestamp'] + 600  # +10 minute termen limită
 
     params = {
-        "tokenIn": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",   # WETH Sepolia
-        "tokenOut": "0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4c",  # USDC Sepolia
+        "tokenIn": Web3.to_checksum_address("0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6"),   # WETH Sepolia
+        "tokenOut": Web3.to_checksum_address("0xd35CcEAD182dCEE0F148EbaC9447DA2c4D449c4c"),  # USDC Sepolia
         "fee": 3000,  # 0.3%
-        "recipient": address,
+        "recipient": Web3.to_checksum_address(address),
         "deadline": deadline,
         "amountIn": amount_in_wei,
         "amountOutMinimum": 0,  # Accept orice (atenție: risc de slippage mare)
