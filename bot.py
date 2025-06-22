@@ -53,12 +53,12 @@ def get_quote():
 
     try:
         quote = quoter.functions.quoteExactInputSingle(
-            WETH,
-            USDC,
-            FEE,
-            amount_in_wei,
-            0
-        ).call()
+    Web3.to_checksum_address(WETH),
+    Web3.to_checksum_address(USDC),
+    FEE,
+    amount_in_wei,
+    0
+).call()
         quote_usdc = quote / 10**6  # USDC are 6 zecimale
         return f"🔄 Quote: {amount_eth} ETH → ≈ {quote_usdc:.2f} USDC"
     except Exception as e:
